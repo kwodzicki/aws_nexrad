@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+import logging
+import os, argparse
+from datetime import datetime
+
+import aws_nexrad 
+from aws_nexrad import download_nexrad_level2
+
+if __name__ == "__main__":
+    parser   = argparse.ArgumentParser(description="AWS NEXRAD Level 2 Downloader")
+    parser.add_argument('-s', '--start-date', type=str, help='Start date for data download in ISO format YYYYMMDDThhmmss. Default start date is current UTC date at 00:00:00Z')
+    parser.add_argument('-e', '--end-date',   type=str, help='End date for data download in ISO format YYYYMMDDThhmmss. Default end date is current UTC date at 23:59:59Z')
+    parser.add_argument('-o', '--outdir',     type=str, help='Top-level output directory for downloaded files. Default is ~/NEXRAD')
+    parser.add_argument('--log-level',        type=str, default='ERROR', help='Logging level. Options : DEBUG, INFO, WARNING, ERROR, CRITICAL. Default is ERROR.')
+    parser.add_argument('--station-list', action='store_true', help='Set to print out a list of all station IDs')
+    parser.add_argument('station', nargs='*', type=str, help='Station IDs (KXXX) to download data for. Use the --station-list argument to see list of all stations. If no station specified, will download data for all stations in that list.')
+
+    args = parser.parse_args()
+    if args.station_list:
+        print('Possible station IDs:')
+        for i in range(0, len(aws_nexrad.NEXRAD_STATION_ID_LIST_141), 10):
+            print('   {}'.format( ', '.join( aws_nexrad.NEXRAD_STATION_ID_LIST_141[i:i+10]) ) )
+        exit(0)
+
+    if (len(args.station) == 0):
+        args.station = aws_nexrad.NEXRAD_STATION_ID_LIST_141
+
+    if (args.outdir is None):
+        args.outdir = os.path.join( os.path.expanduser('~'), 'NEXRAD', '' )
+
+    if (args.start_date is not None):
+        args.start_date = datetime.strptime(args.start_date, '%Y%m%dT%H%M%S')
+
+    if (args.end_date is not None):
+        args.end_date = datetime.strptime(args.end_date, '%Y%m%dT%H%M%S')
+
+
+    strmhand = logging.StreamHandler()
+    strmhand.setLevel( getattr(logging, args.log_level.upper(), 'ERROR') )
+    aws_nexrad.log.addHandler(strmhand)
+   
+    res  = download_nexrad_level2(args.station, args.outdir, 
+            date1 = args.start_date, 
+            date2 = args.end_date)

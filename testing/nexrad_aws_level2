@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+import logging
+import shutil
+from datetime import datetime
+
+from nexrad_aws_level2 import log
+from nexrad_aws_level2 import nexrad_aws_level2
+from nexrad_aws_level2 import nexrad_aws_level2_parallel
+
+if __name__ == "__main__":
+    strmhand = logging.StreamHandler()
+    strmhand.setLevel(logging.DEBUG)
+    log.addHandler(strmhand)
+
+    stations = ['KABR', 'KHGX', 'KLWX']
+    date1    = datetime(2019,  6,  1,  0, 40)
+    date2    = datetime(2019,  6,  1,  1, 20)
+    outroot  = '/home/kwodzicki/Data/NEXRAD/level2'
+    
+#    shutil.rmtree( outroot )
+    
+#    res      = nexrad_aws_level2(stations, outroot, date1=date1, date2=date2)
+
+    shutil.rmtree( outroot )
+
+    res      = nexrad_aws_level2_parallel(stations, outroot, date1=date1, date2=date2)
